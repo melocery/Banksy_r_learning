@@ -1,11 +1,11 @@
 # process_merfish_main.R
 rm(list=ls())
 graphics.off()
-out.dir = 'fig3-hypothalamus/out/'
+out.dir = 'out/'
 check <- dir.exists(out.dir)
 if (!check) dir.create(out.dir)
 
-results.dir = 'fig3-hypothalamus/out/merfish'
+results.dir = 'out/merfish'
 check <- dir.exists(results.dir)
 if (!check) dir.create(results.dir)
 # You need the (legacy) version of BANKSY (v 0.1.5) for recreating this analysis: 
@@ -19,7 +19,8 @@ if (!check) dir.create(results.dir)
 # already performed on all naive animals. 
 # Downloading this object, and placing it in the correct directory (see below), 
 # along with setting the flag:
-USE_PROVIDED_BANKSY_OBJ = TRUE
+# USE_PROVIDED_BANKSY_OBJ = TRUE
+USE_PROVIDED_BANKSY_OBJ = FALSE
 # to TRUE allows for exact reproduction of the results in the paper. 
 # Download instructions: 
 # The Banksy Object can be downloaded from 
@@ -62,18 +63,18 @@ library(ComplexHeatmap)
 library(peakRAM)
 # library(qvalue) # check how many of these are needed.
 
-results.dir = 'fig3-hypothalamus/out/merfish/'
-data.dir = 'fig3-hypothalamus/data/'
+results.dir = 'out/merfish/'
+data.dir = 'data/'
 
-k_geom = c(15, 30);lambda = c(0.2);npcs = 20;k_expr = 50;res = seq(0.5, 5, 0.25)
+# k_geom = c(15, 30);lambda = c(0.2);npcs = 20;k_expr = 50;res = seq(0.5, 5, 0.25)
+k_geom = 15;lambda = c(0.2);npcs = 20;k_expr = 50;res = seq(0.5, 5, 0.25)
 list_of_animal_IDs = 1:number_of_animals 
 
 if (USE_PROVIDED_BANKSY_OBJ){
   bank <- readRDS(file = paste0(data.dir, 'banksyObj_provided.rds'))
-  
 } else {
   # # Load data
-  all_mfish = fread('fig3-hypothalamus/data/Moffitt_and_Bambah-Mukku_et_al_merfish_all_cells.csv') # see the readme file in the data dir
+  all_mfish = fread('data/merfish_all_cells.csv') # see the readme file in the data dir
   all_mfish <- all_mfish[,-c('Fos')]# remove Fos gene per Moffitt manuscript
   all_mfish = cbind(cell_ids = paste0('cell_', 1:nrow(all_mfish)), all_mfish)
   m.list = lapply(list_of_animal_IDs, function(x) all_mfish[all_mfish$Animal_ID==x,])
@@ -142,8 +143,6 @@ if (USE_PROVIDED_BANKSY_OBJ){
   # ------ end clustering block ---------
 }
 
-
-
 reorder_genes <- function(bank){
   if (is.list(bank@own.expr)) {
     x<-bank@own.expr[[1]]
@@ -181,23 +180,14 @@ sampled.cells = bank@meta.data$cell_ID[sample.int(nrow(bank@meta.data),
                                                        min(80000, nrow(bank@meta.data)))]
 bank.sampled = SubsetBanksy(bank, cells = sampled.cells)
 
-
-
 hypo.cols['3'] = '#848482'
-
 hypo.cols['5'] = '#008856'
-
 hypo.cols['7'] = '#BE0032'
 hypo.cols['8'] = '#F38400'
-
 hypo.cols['10'] = '#F99379'
 hypo.cols['11'] = '#5F6B6D' 
-
 hypo.cols['13'] = '#0067A5'
-
 hypo.cols['15'] = '#F6A6A0'
-
-
 
 bank.runs = c('clust_M1_lam0_k50_res0.5', 
   'clust_M1_lam0.2_k50_res0.5') 
@@ -217,8 +207,6 @@ umapdims <- mapply(FUN = function(reduction, by, title) plotReduction(bank.sampl
                    SIMPLIFY = FALSE)
 do.call("grid.arrange", c(umapdims, ncol = length(bank.runs)))
 dev.off()
-
-
 
 # spatial plot for animal 1. 
 bank.animal1 = copy(bank)
@@ -273,8 +261,6 @@ spatial_plots2 <- function(x, colorscheme = hypo.cols) {
 spatial_plots2(bank.animal1, hypo.cols)
 
 
-
-
 ################# Identify DE genes in the oligodendrocyte subpopulations #####################
 # In the BANKSY clustering (clust_M1_lam0.2_k50_res0.5), clusters 7 and 8 correspond to the 
 # white and grey matter oligodendrocytes. In the nonspatial clustering (clust_M1_lam0_k50_res0.5),
@@ -322,7 +308,8 @@ OD.mk.de<-union(unique(unlist(genes_sp_w_od[1:10,])),
 # [1] "Mbp"   "Mlc1"  "Cck"   "Gad1"  "Sln"   "Lpar1" "Trh"   "Gjc3"  "Gnrh1" "Ucn3"  "Plin3" "Cbln2" "Syt4"  "Dgkk" 
 
 #### - redo with the top 10 de for wilcox and t test genes: 
-bank_OD_mk <- SubsetBanksy(bank, cells = OD_cells, features = OD.mk.de) #
+bank_OD_mk <- SubsetBanksy(bank, cells = OD_cells, features = OD.mk.de)
+# ScaleBanksy
 bank_OD_mk_scaled <- ScaleBanksy(bank_OD_mk)
 bank_OD_mk_scaled<-reorder_genes(bank_OD_mk_scaled)
 
@@ -380,6 +367,7 @@ for (i in 1:length(layer_IDs)){
   layer_id<-layer_IDs[i]
   bank_layer<- SubsetBanksy(bank.animal1_OD, 
                             metadata = Bregma %in% layer_id)
+  ## plotSpatial not found
   spatdims[[i]]<-plotSpatial(bank_layer, type = 'discrete',
                              by = runid, 
                              # main = runid,
