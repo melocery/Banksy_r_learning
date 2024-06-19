@@ -19,8 +19,7 @@ if (!check) dir.create(results.dir)
 # already performed on all naive animals. 
 # Downloading this object, and placing it in the correct directory (see below), 
 # along with setting the flag:
-# USE_PROVIDED_BANKSY_OBJ = TRUE
-USE_PROVIDED_BANKSY_OBJ = FALSE
+USE_PROVIDED_BANKSY_OBJ = TRUE
 # to TRUE allows for exact reproduction of the results in the paper. 
 # Download instructions: 
 # The Banksy Object can be downloaded from 
