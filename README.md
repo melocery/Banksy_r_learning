@@ -28,6 +28,27 @@ BANKSY is a method for clustering spatial omics data by augmenting the features 
 
 BANKSY is applicable to a wide array of spatial technologies (e.g. 10x Visium, Slide-seq, MERFISH, CosMX, CODEX) and scales well to large datasets.  
 
-## code repository
+### code repository
 [banksy-zenodo](https://github.com/jleechung/banksy-zenodo/tree/main): Scripts to reproduce BANKSY analyses.  
 Focus on the **fig3-hypothalamus**.  
+
+### installation
+The *Banksy* package can be installed via Bioconductor. This currently requires R `>= 4.4.0`.  
+
+```
+BiocManager::install('Banksy')
+```
+
+If the error message  
+
+```
+error in irlba::irlba(L, nv = n, nu = 0, maxit = iters) : 
+  function 'as_cholmod_sparse' not provided by package 'Matrix'
+```
+
+appears, reinstall the packages `Matrix` and `irlba`:  
+
+```
+install.packages("Matrix")
+install.packages("irlba")
+```
