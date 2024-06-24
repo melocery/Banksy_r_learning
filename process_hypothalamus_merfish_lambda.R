@@ -5,24 +5,12 @@ out.dir = 'out/'
 check <- dir.exists(out.dir)
 if (!check) dir.create(out.dir)
 
-results.dir = 'out/allcells'
+results.dir = 'out/lambda'
 check <- dir.exists(results.dir)
 if (!check) dir.create(results.dir)
 
-# If performing clustering yourself (i.e., not using the Banksy object we provide), 
-# then you may want to use fewer than the 11 naive animals in your initial run, 
-# as the full 11 animals comprise ~0.5 million cells, and can some time and RAM to 
-# run the full UMAP and  clustering steps. 
-# As a start, we recommend using just 
-# 2 or 4 animals, which lead to qualitatively similar results as the full set of naive animals. 
+USE_PROVIDED_BANKSY_OBJ = TRUE
 number_of_animals = 2 # set this to 11 to use all naive animals. 
-
-################# # If running the clustering yourself # ################
-# It is possible that the numbers assigned to the clusters are slightly different than what were obtained 
-# by us. In some of the plotting and DE gene calling analysis below, we have manually specified these cluster numbers, 
-# so to reproduce our results, you will need to determine which cluster corresponds to the mature oligodendrocytes. 
-# 
-################## # Analysis Code # ################## 
 
 library(Banksy)
 library(gridExtra) # grid.arrange
@@ -42,11 +30,10 @@ library(ComplexHeatmap)
 library(peakRAM)
 # library(qvalue) # check how many of these are needed.
 
-results.dir = 'out/allcells'
+results.dir = 'out/lambda/'
 data.dir = 'data/'
 
-# k_geom = c(15, 30);lambda = c(0.2);npcs = 20;k_expr = 50;res = seq(0.5, 5, 0.25)
-k_geom = 15;lambda = c(0.2);npcs = 20;k_expr = 50;res = seq(0.5, 5, 0.25)
+k_geom = 15;lambda = c(0.2, 0.4, 0.6, 0.8, 1.0);npcs = 20;k_expr = 50;res = 0.5
 list_of_animal_IDs = 1:number_of_animals 
 
 # # Load data
@@ -95,8 +82,6 @@ ram_pca_banksy = peakRAM(
 )
   
 # bank <- Banksy:::RunBanksyUMAP(bank, lambda = lambdas, npcs = npcs, nneighbors = k_expr)
-# Error in irlba::irlba(L, nv = n, nu = 0, maxit = iters) : function 'as_cholmod_sparse' not provided by package 'Matrix'
-# sovled by reinstalling packages "Matrix" and "irlba"
 ram_umap_banksy = peakRAM(
   bank <- Banksy:::RunBanksyUMAP(bank, lambda = lambdas, npcs = npcs, nneighbors = k_expr)
 )
@@ -115,7 +100,7 @@ ram_cluster_banksy = peakRAM(
 )
 time_taken = proc.time() - ptm
 print(time_taken)
-saveRDS(bank, file = paste0(data.dir, 'banksyObj_naive_', number_of_animals, '.rds'))
+saveRDS(bank, file = paste0(data.dir, 'banksyObj_naive_lambda_', number_of_animals, '.rds'))
 # bank <- readRDS(file = paste0(data.dir, 'banksyObj_naive_run.rds'))
 # ------ end clustering block ---------
 
@@ -141,8 +126,8 @@ reorder_genes <- function(bank){
 
 non_ambig = bank@meta.data$cell_ID[which(bank@meta.data$Cell_class != 'Ambiguous')]
 bank = SubsetBanksy(bank, cells = non_ambig)
-nonspatial.main.run = 'clust_M1_lam0_k50_res0.5'
-spatial.main.run = 'clust_M1_lam0.2_k50_res0.5'
+nonspatial.main.run = 'clust_M0_lam0_k50_res0.5'
+spatial.main.run = 'clust_M0_lam0.2_k50_res0.5'
 moffitt.labels = 'clust_major_num'
 bank = ConnectClusters(bank = bank, map.to = spatial.main.run)
 num_clusters<-max(bank@meta.data[,clust.names(bank)])
@@ -167,11 +152,13 @@ hypo.cols['13'] = '#0067A5'
 hypo.cols['15'] = '#F6A6A0'
 
 bank.runs = c('clust_M0_lam0_k50_res0.5', 
-  'clust_M0_lam0.2_k50_res0.5') 
+  'clust_M0_lam0.2_k50_res0.5','clust_M0_lam0.4_k50_res0.5', 
+  'clust_M0_lam0.6_k50_res0.5','clust_M0_lam0.8_k50_res0.5',
+  'clust_M0_lam1_k50_res0.5') 
 bank.reductions<- paste0('umap_M0_lam', as.numeric(gsub('.*lam|_.*', '', bank.runs)))
 
 png(paste0(results.dir, '/umap_banksy.png'), units = 'in',  res = 200,  
-    height = 9*1.25, width = 18*1.25)
+    height = 9*1.25, width = 40*1.25)
 umapdims <- mapply(FUN = function(reduction, by, title) plotReduction(bank.sampled, 
                                                                       reduction = reduction, 
                                                                       main = title, legend = TRUE,
@@ -180,7 +167,9 @@ umapdims <- mapply(FUN = function(reduction, by, title) plotReduction(bank.sampl
                                                                       pt.size = 0.2, main.size = 35), 
                    reduction = as.list(bank.reductions), 
                    by = as.list(c(bank.runs[2], bank.runs[2])), 
-                   title = as.list(c('Non-spatial UMAP space', 'BANKSY UMAP space')),
+                   title = as.list(c('Non-spatial UMAP space', 'BANKSY UMAP space lam = 0.2', 
+                                     'BANKSY UMAP space lam = 0.4','BANKSY UMAP space lam = 0.6',
+                                     'BANKSY UMAP space lam = 0.8','BANKSY UMAP space lam = 1.0')),
                    SIMPLIFY = FALSE)
 do.call("grid.arrange", c(umapdims, ncol = length(bank.runs)))
 dev.off()
@@ -207,7 +196,14 @@ bank.animal1@reduction$umap_M1_lam0.2 <- bank.animal1@reduction$umap_M1_lam0.2[g
 ]
 
 
-titles = c('Non-spatial', 'BANKSY')
+titles = c('Non-spatial UMAP space', 'BANKSY lam = 0.2', 
+           'BANKSY lam = 0.4','BANKSY lam = 0.6',
+           'BANKSY lam = 0.8','BANKSY lam = 1.0')
+bank.runs = c('clust_M0_lam0_k50_res0.5', 
+              'clust_M0_lam0.2_k50_res0.5','clust_M0_lam0.4_k50_res0.5', 
+              'clust_M0_lam0.6_k50_res0.5','clust_M0_lam0.8_k50_res0.5',
+              'clust_M0_lam1_k50_res0.5')
+
 names(titles) = bank.runs
 
 spatial_plots2 <- function(x, colorscheme = hypo.cols) {
