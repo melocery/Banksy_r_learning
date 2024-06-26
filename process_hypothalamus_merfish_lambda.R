@@ -9,7 +9,7 @@ results.dir = 'out/lambda'
 check <- dir.exists(results.dir)
 if (!check) dir.create(results.dir)
 
-USE_PROVIDED_BANKSY_OBJ = TRUE
+# USE_PROVIDED_BANKSY_OBJ = TRUE
 number_of_animals = 2 # set this to 11 to use all naive animals. 
 
 library(Banksy)
@@ -103,7 +103,6 @@ print(time_taken)
 saveRDS(bank, file = paste0(data.dir, 'banksyObj_naive_lambda_', number_of_animals, '.rds'))
 # bank <- readRDS(file = paste0(data.dir, 'banksyObj_naive_run.rds'))
 # ------ end clustering block ---------
-
 
 reorder_genes <- function(bank){
   if (is.list(bank@own.expr)) {
@@ -232,5 +231,3 @@ spatial_plots2 <- function(x, colorscheme = hypo.cols) {
   }
 }
 spatial_plots2(bank.animal1, hypo.cols)
-
-
