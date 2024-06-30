@@ -153,7 +153,7 @@ spatial_plots2 <- function(x, colorscheme = hypo.cols) {
       spatdims[[jj]]<-plotSpatial(bank_layer, type = 'discrete',
                                   by = runid,
                                   col.discrete = colorscheme,
-                                  pt.size = 0.2,legend = FALSE, 
+                                  pt.size = 4,legend = FALSE, 
                                   # main = paste0(layer_id, 'mm'),
                                   main.size = 15)+#facet_wrap(~feature, ncol = 5)+ 
         scale_x_discrete(labels = NULL, breaks = NULL) + labs(x = NULL) +
