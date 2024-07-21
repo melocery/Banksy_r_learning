@@ -74,7 +74,7 @@ if (USE_PROVIDED_BANKSY_OBJ){
 } else {
   # # Load data
   all_mfish = fread('data/merfish_all_cells.csv') # see the readme file in the data dir
-  all_mfish <- all_mfish[,-c('Fos')]# remove Fos gene per Moffitt manuscript
+  all_mfish <- all_mfish[,-c('Fos')] # remove 'Fos' gene per Moffitt manuscript
   all_mfish = cbind(cell_ids = paste0('cell_', 1:nrow(all_mfish)), all_mfish)
   m.list = lapply(list_of_animal_IDs, function(x) all_mfish[all_mfish$Animal_ID==x,])
   expr.list <- lapply(m.list, function(x){
